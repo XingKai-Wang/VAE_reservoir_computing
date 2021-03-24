@@ -1,27 +1,35 @@
 import torchvision
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
+import torch.utils.data as data
+import numpy as np
 
-class Datasets:
-    def __init__(self, mode = 'train'):
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-        if mode == 'train':
-            self.data = torchvision.datasets.MNIST(root = './data',
-                                                   train = True,
-                                                   download = True,
-                                                   transform = self.transform)
-        if mode == 'Test':
-            self.data = torchvision.datasets.MNIST(root = './data',
-                                                   train = False,
-                                                   download = True,
-                                                   transform = self.transform)
+class Binarize:
+    def __init__(self, threshold):
+        self.threshold = threshold
 
-    def trainloader(self, data):
-        mnist = DataLoader(data, batch_size = 16, shuffle = True, num_workers = 2)
-        return mnist
+    def __call__(self, image):
+        return (image > self.threshold).float()
 
-    def testloader(self, data):
-        mnist = DataLoader(data, batch_size = 16, shuffle = True, num_workers = 2)
-        return mnist
+def datasets(root = './data', download = True, batch_size = 64, num_workers = 4):
+    transform = transforms.Compose([transforms.ToTensor(), Binarize(threshold=0.5)])
+
+    datasets = torchvision.datasets.MNIST(root = root,
+                                      train = True,
+                                      download = download,
+                                      transform = transform)
+    test_data = torchvision.datasets.MNIST(root = root,
+                                          train = False,
+                                          download = download,
+                                          transform = transform)
+
+    train_data = data.dataset.Subset(datasets, np.arange(45000))
+    val_data = data.dataset.Subset(datasets, np.arange(45000, 50000))
+
+
+    train_loader = DataLoader(train_data, batch_size = batch_size, shuffle = True, num_workers = num_workers, pin_memory = True)
+    val_loader = DataLoader(val_data, batch_size = batch_size, shuffle = True, num_workers = num_workers)
+    test_loader = DataLoader(test_data, batch_size = batch_size, shuffle = True, num_workers = num_workers)
+    return train_loader, val_loader, test_loader
 
 
