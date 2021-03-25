@@ -4,27 +4,29 @@ from helper import *
 from MLP_encoder_decoder import MLPEncoder
 from MLP_encoder_decoder import MLPDecoder
 import torch.nn.functional as F
+from torch import optim
 
 class VAE(nn.Module):
-    def __init__(self):
+    def __init__(self, activation = None):
         super(VAE, self).__init__()
-        self.encoder = MLPEncoder()
-        self.decoder = MLPDecoder()
+        self.activation = activation
+        self.encoder = MLPEncoder(input_dims = 784, hidden_dims = (512, 256), z_dims = 20, activation = self.activation)
+        self.decoder = MLPDecoder(z_dims = 10, hidden_dims = (256, 512), output_dims = (1, 28, 28), activation = self.activation)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z
         mu, log_var = self.encoder.forward(image)
         # calculate KL divergence
-        kld = torch.sum(KLD(mu, log_var))
+        kld = KLD(mu, log_var) / (image.size(0) * 28 * 28)
         # apply reparameterization trick on z
         z = reparameterization(mu, log_var)
         # decode forward process: reconstruct data with 784 dimensions
         recon_img = self.decoder.forward(z)
         # calculate the reconstruction loss
-        reloss = F.binary_cross_entropy_with_logits(recon_img, image, reduction = 'sum')
+        reloss = F.mse_loss(recon_img, image)
         # elbo  = kld + reloss
-        elbo = (kld + reloss).mean()
+        elbo = kld + reloss
 
-        return elbo, recon_img
+        return elbo, recon_img, reloss, kld
 
 

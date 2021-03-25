@@ -4,15 +4,9 @@ from torch.utils.data import DataLoader
 import torch.utils.data as data
 import numpy as np
 
-class Binarize:
-    def __init__(self, threshold):
-        self.threshold = threshold
-
-    def __call__(self, image):
-        return (image > self.threshold).float()
 
 def datasets(root = './data', download = True, batch_size = 64, num_workers = 4):
-    transform = transforms.Compose([transforms.ToTensor(), Binarize(threshold=0.5)])
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5,], [0.5,])])
 
     datasets = torchvision.datasets.MNIST(root = root,
                                       train = True,

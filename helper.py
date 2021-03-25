@@ -1,5 +1,7 @@
 import torch
-
+from scipy.stats import norm
+from torchvision.utils import make_grid
+from torch import optim
 
 def reparameterization(mu, log_var):
     '''
@@ -18,3 +20,23 @@ def KLD(mu, log_var):
     kld = torch.sum(kld_element).mul_(-0.5)
 
     return kld
+
+def optimizer(model, lr):
+    optimizer = optim.Adam(model.parameters(), lr = lr)
+    return optimizer
+
+def visualiztion_laten(decoder, gird_size = 20):
+    start = 0.5 / (gird_size + 1)
+    end = 1 / (gird_size + 1)
+
+    x = torch.tensor(norm.ppf(torch.linspace(start, end, 20)))
+    y = torch.tensor(norm.ppf(torch.linspace(start, end, 20)))
+
+    laten = torch.stack(torch.meshgrid(x, y))
+    laten = laten.reshape(-1, 2)
+
+    mean = decoder.forward(laten)
+    img = torch.sigmoid(mean)
+    img_grid = make_grid(img)
+
+    return img_grid
