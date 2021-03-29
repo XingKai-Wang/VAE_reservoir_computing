@@ -6,7 +6,7 @@ import numpy as np
 
 
 def datasets(root = './data', download = True, batch_size = 64, num_workers = 4):
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5,], [0.5,])])
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0,], [1,])])
 
     datasets = torchvision.datasets.MNIST(root = root,
                                       train = True,
