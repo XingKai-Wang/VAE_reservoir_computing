@@ -1,16 +1,16 @@
 import torch
 from torch.autograd import Variable
+from torchvision.utils import save_image
 import numpy as np
 from VAE import VAE
 from helper import *
 from datasets import datasets
-#from datasets import Binarize
 import visdom
 import torch.autograd
 
 
 
-def training(name, model, optimizer, train_loader, epoch):
+def training(name, model, optimizer, data_loader, epoch):
     print(model)
     training_loss = 0
     total_loss = []
@@ -18,9 +18,9 @@ def training(name, model, optimizer, train_loader, epoch):
     if torch.cuda.device_count() > 1:
         model.to(device)
     model.train()
-    for e in range(epoch + 1):
+    for e in range(epoch):
         epoch_loss = []
-        for batch_index, data in enumerate(train_loader):
+        for batch_index, data in enumerate(data_loader):
             train_data, _ = data
             # train_data: [b, 1, 28, 28]
             train_data = Variable(train_data)
@@ -39,15 +39,12 @@ def training(name, model, optimizer, train_loader, epoch):
                 training_loss = 0.0
         total_loss.append(np.mean(epoch_loss))
 
-        viz = visdom.Visdom()
-        x, _ = iter(train_loader).next()
-        with torch.no_grad():
-            _, x_hat, _, _ = model(x)
-            viz.images(x, nrow=8, win='origin',opts=dict(title = 'x_origin'))
-            viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
+        if e % 10 == 0:
+            visdom_visualization(name, model, train_loader)
+    plot_loss(name, epoch, total_loss)
 
-
-
+    img_grid = visualization_laten(model.decoder)
+    save_image(img_grid, './plot/vae_laten.png')
     torch.save(model.state_dict(), './model/{}.pt'.format(name))
 
     return total_loss
@@ -56,6 +53,6 @@ if __name__ == '__main__':
     train_loader, val_loader, test_loader = datasets()
     model = VAE(activation = 'LeakyRelu')
     optimizer = optimizer(model, 1e-3)
-    total_loss = training('first_mlp_training', model, optimizer, train_loader = train_loader, epoch = 1)
+    total_loss = training('first_mlp_training', model, optimizer, data_loader = train_loader, epoch = 20)
 
 

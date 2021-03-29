@@ -22,8 +22,11 @@ class VAE(nn.Module):
         z = reparameterization(mu, log_var)
         # decode forward process: reconstruct data with 784 dimensions
         recon_img = self.decoder.forward(z)
+        # sample a binary image
+        image = torch.bernoulli(image)
         # calculate the reconstruction loss
-        reloss = F.mse_loss(recon_img, image)
+        criterion = nn.BCELoss()
+        reloss = criterion(recon_img, image)
         # elbo  = kld + reloss
         elbo = kld + reloss
 
