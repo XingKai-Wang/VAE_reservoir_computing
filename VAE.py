@@ -7,11 +7,13 @@ import torch.nn.functional as F
 from torch import optim
 
 class VAE(nn.Module):
-    def __init__(self, activation = None):
+    def __init__(self, model_name, z_dim, activation, *args, **kwargs):
         super(VAE, self).__init__()
         self.activation = activation
-        self.encoder = MLPEncoder(input_dims = 784, hidden_dims = (512, 256), z_dims = 20, activation = self.activation)
-        self.decoder = MLPDecoder(z_dims = 10, hidden_dims = (256, 512), output_dims = (1, 28, 28), activation = self.activation)
+        self.z_dim = z_dim
+        if model_name == 'MLP':
+            self.encoder = MLPEncoder(input_dims = 784, hidden_dims = (512, 256), z_dims = z_dim, activation = activation)
+            self.decoder = MLPDecoder(z_dims = z_dim / 2, hidden_dims = (256, 512), output_dims = (1, 28, 28), activation = activation)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z
