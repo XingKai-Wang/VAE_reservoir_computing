@@ -3,17 +3,22 @@ import torch.nn as nn
 from helper import *
 from MLP_encoder_decoder import MLPEncoder
 from MLP_encoder_decoder import MLPDecoder
+from CNN_encoder_decoder import CNNEncoder
+from CNN_encoder_decoder import CNNDecoder
 import torch.nn.functional as F
 from torch import optim
 
 class VAE(nn.Module):
-    def __init__(self, model_name, z_dim, activation, *args, **kwargs):
+    def __init__(self, model_name, z_dim, num_filters, activation, *args, **kwargs):
         super(VAE, self).__init__()
         self.activation = activation
         self.z_dim = z_dim
         if model_name == 'MLP':
-            self.encoder = MLPEncoder(input_dims = 784, hidden_dims = (512, 256), z_dims = z_dim, activation = activation)
-            self.decoder = MLPDecoder(z_dims = z_dim / 2, hidden_dims = (256, 512), output_dims = (1, 28, 28), activation = activation)
+            self.encoder = MLPEncoder(input_dims=784, hidden_dims=(512, 256), z_dims=z_dim, activation=activation)
+            self.decoder = MLPDecoder(z_dims=z_dim / 2, hidden_dims=(256, 512), output_dims=(1, 28, 28), activation=activation)
+        if model_name == 'CNN':
+            self.encoder = CNNEncoder(num_input_channels=1, num_filters=num_filters, z_dims=z_dim)
+            self.decoder = CNNDecoder(num_input_channels=1, num_filters=num_filters,z_dims=z_dim / 2)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z

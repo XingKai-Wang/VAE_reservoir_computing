@@ -1,5 +1,4 @@
 import argparse
-import torch
 from torch.autograd import Variable
 from torchvision.utils import save_image
 import numpy as np
