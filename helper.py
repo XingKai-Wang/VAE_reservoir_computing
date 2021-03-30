@@ -3,6 +3,7 @@ import visdom
 from scipy.stats import norm
 from torchvision.utils import make_grid
 from torch import optim
+from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -29,25 +30,42 @@ def optimizer(model, lr):
     optimizer = optim.Adam(model.parameters(), lr = lr)
     return optimizer
 
-def visdom_visualization(name, model, data_loader):
-    viz = visdom.Visdom(env = name)
+def evaluation(model, data_loader, total_loss_val):
+    val_loss = 0.0
+    epoch_loss = []
+    model.eval()
+    for batch_index, data in enumerate(data_loader):
+        val_data, _ = data
+        val_data = Variable(val_data)
+        if torch.cuda.is_available():
+            val_data = val_data.cuda()
+        loss, recom_img, reloss, kld = model(val_data)
+
+        val_loss += loss.item()
+        epoch_loss.append(loss.item)
+    total_loss_val.append(np.mean(epoch_loss))
+
+    return total_loss_val
+
+def visdom_visualization(name, number, model, data_loader):
+    viz = visdom.Visdom(env = name + number)
     x, _ = iter(data_loader).next()
     with torch.no_grad():
         _, x_hat, _, _ = model(x)
         viz.images(x, nrow=8, win='origin', opts=dict(title='x_origin'))
         viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
 
-def plot_loss(name, epoch, total_loss):
+def plot_loss(name, number, epoch, total_loss, eva_type):
     sns.set_style('darkgrid')
     x = np.arange(1, epoch + 1)
     my_x_ticks = np.arange(1, epoch + 1, 1)
     plt.xticks(my_x_ticks)
-    sns.lineplot(x=x, y=total_loss, label='training loss on the mnist data')
+    sns.lineplot(x=x, y=total_loss, label='{} on the mnist data'.format(eva_type))
     # plt.fill_between(x = 'nums', y1 = df['avg'] - df['std'], y2 = df['avg'] + df['std'], alpha = 0.1,color = 'blue', data = df)
     plt.xlabel('epoch')
-    plt.ylabel('training loss')
+    plt.ylabel('{}'.format(eva_type))
     plt.legend()
-    plt.savefig('./plot/{}_training_loss.png'.format(name))
+    plt.savefig('./plot/{}{}_{}.png'.format(name, number, eva_type))
 
 def visualization_laten(decoder, grid_size = 20):
     start = 0.5 / (grid_size + 1)
