@@ -30,19 +30,19 @@ def optimizer(model, lr):
     optimizer = optim.Adam(model.parameters(), lr = lr)
     return optimizer
 
-def evaluation(model, data_loader, total_loss_val):
+def evaluation(model, data_loader, total_loss_val,device):
     val_loss = 0.0
     epoch_loss = []
     model.eval()
     for batch_index, data in enumerate(data_loader):
         val_data, _ = data
         val_data = Variable(val_data)
-        if torch.cuda.is_available():
-            val_data = val_data.cuda()
+        if torch.cuda.device_count() > 1:
+            val_data.to(device)
         loss, recom_img, reloss, kld = model(val_data)
 
         val_loss += loss.item()
-        epoch_loss.append(loss.item)
+        epoch_loss.append(loss.item())
     total_loss_val.append(np.mean(epoch_loss))
 
     return total_loss_val
@@ -55,10 +55,11 @@ def visdom_visualization(name, number, model, data_loader):
         viz.images(x, nrow=8, win='origin', opts=dict(title='x_origin'))
         viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
 
+
 def plot_loss(name, number, epoch, total_loss, eva_type):
     sns.set_style('darkgrid')
-    x = np.arange(1, epoch + 1)
-    my_x_ticks = np.arange(1, epoch + 1, 1)
+    x = np.arange(0, epoch + 1)
+    my_x_ticks = np.arange(0, epoch + 1, 5)
     plt.xticks(my_x_ticks)
     sns.lineplot(x=x, y=total_loss, label='{} on the mnist data'.format(eva_type))
     # plt.fill_between(x = 'nums', y1 = df['avg'] - df['std'], y2 = df['avg'] + df['std'], alpha = 0.1,color = 'blue', data = df)
@@ -67,18 +68,17 @@ def plot_loss(name, number, epoch, total_loss, eva_type):
     plt.legend()
     plt.savefig('./plot/{}{}_{}.png'.format(name, number, eva_type))
 
-def visualization_laten(decoder, grid_size = 20):
+def visualization_laten(decoder, grid_size = 8):
     start = 0.5 / (grid_size + 1)
     end = (grid_size + 0.5) / (grid_size + 1)
 
-    x = torch.tensor(norm.ppf(torch.linspace(start, end, 20)))
-    y = torch.tensor(norm.ppf(torch.linspace(start, end, 20)))
+    x = torch.tensor(norm.ppf(torch.linspace(start, end, 8)))
+    y = torch.tensor(norm.ppf(torch.linspace(start, end, 8)))
 
     laten = torch.stack(torch.meshgrid(x, y))
     laten = laten.reshape(-1, 10)
 
     img = decoder.forward(laten.float())
-    #img = torch.sigmoid(mean)
     img_grid = make_grid(img, nrow=grid_size, padding=10)
 
     return img_grid

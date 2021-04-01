@@ -16,7 +16,7 @@ def training(args,):
     train_loader, val_loader, test_loader = datasets(batch_size=args.batch_size)
 
     # create model
-    model = VAE(model_name=args.model,z_dim=args.z_dim,activation=args.activation)
+    model = VAE(model_name=args.model,z_dim=args.z_dim,num_filters=args.num_filters,activation=args.activation)
 
     # optimizer
     optim = optimizer(model, args.lr)
@@ -30,14 +30,14 @@ def training(args,):
     if torch.cuda.device_count() > 1:
         model.to(device)
     model.train()
-    for e in range(args.epoch):
+    for e in range(args.epoch + 1):
         epoch_loss = []
         for batch_index, data in enumerate(train_loader):
             train_data, _ = data
             # train_data: [b, 1, 28, 28]
             train_data = Variable(train_data)
-            if torch.cuda.is_available():
-                train_data = train_data.cuda()
+            if torch.cuda.device_count() > 1:
+                train_data.to(device)
             optim.zero_grad()
             loss, recon_img, reloss, kld = model(train_data)
             loss.backward()
@@ -52,15 +52,17 @@ def training(args,):
         total_loss.append(np.mean(epoch_loss))
 
     # start validation
-        total_loss_val = evaluation(model,val_loader,total_loss_val)
+        total_loss_val = evaluation(model,val_loader,total_loss_val,device)
 
 
     # plot loss and reconstruct image
-        if e % 10 == 0:
+        if e % 10 == 0 or e == args.epoch - 1:
             visdom_visualization(args.model, args.number, model, train_loader)
+            model.sample_and_save(args.batch_size, e)
     plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
     plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
     # plot laten space
+
     img_grid = visualization_laten(model.decoder)
     save_image(img_grid, './plot/{}{}vae_laten.png'.format(args.model,args.number))
     torch.save(model.state_dict(), './model/{}{}.pt'.format(args.model,args.number))
@@ -73,6 +75,7 @@ if __name__ == '__main__':
 # model hyperparameters
     parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
+    parser.add_argument('--num_filters',default=32,type=int,help='number of filters')
     parser.add_argument('--activation',default='LeakyRule',type=str,help='what activate function to use',choices=['Relu','LeakyRelu'])
 
 # optimizer hyperparameters
