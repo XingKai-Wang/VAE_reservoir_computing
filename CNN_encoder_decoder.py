@@ -6,8 +6,8 @@ class CNNEncoder:
         '''
 
         :param num_input_channels: Number of input channels of the image. For MNIST, this parameter is 1
-        :param num_filters:
-        :param z_dims:
+        :param num_filters: number of filters to use in first layer
+        :param z_dims: dimensions of laten space
         '''
         super(CNNEncoder, self).__init__()
         self.num_input_channels = num_input_channels
