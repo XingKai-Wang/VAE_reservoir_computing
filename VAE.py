@@ -17,7 +17,7 @@ class VAE(nn.Module):
             self.decoder = MLPDecoder(z_dims=z_dim // 2, hidden_dims=(256, 512), output_dims=(1, 28, 28), activation=activation)
         if model_name == 'CNN':
             self.encoder = CNNEncoder(num_input_channels=1, num_filters=num_filters, z_dims=z_dim)
-            self.decoder = CNNDecoder(num_input_channels=1, num_filters=num_filters,z_dims=z_dim // 2)
+            self.decoder = CNNDecoder(num_input_channels=1, num_filters=num_filters, z_dims=z_dim // 2)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z

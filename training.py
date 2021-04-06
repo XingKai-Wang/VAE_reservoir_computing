@@ -11,7 +11,7 @@ import torch.autograd
 
 
 
-def training(args,):
+def training(args):
     # load datasets
     train_loader, val_loader, test_loader = datasets(batch_size=args.batch_size)
 
@@ -56,15 +56,15 @@ def training(args,):
 
 
     # plot loss and reconstruct image
-        if e % 10 == 0 or e == args.epoch - 1:
+        if e % 10 == 0:
             visdom_visualization(args.model, args.number, model, train_loader)
             model.sample_and_save(args.batch_size, e)
     plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
     plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
     # plot laten space
-
-    img_grid = visualization_laten(model.decoder)
-    save_image(img_grid, './plot/{}{}vae_laten.png'.format(args.model,args.number))
+    if args.z_dim == 2:
+        img_grid = visualization_laten(model.decoder)
+        save_image(img_grid, './plot/{}{}vae_laten.png'.format(args.model,args.number))
     torch.save(model.state_dict(), './model/{}{}.pt'.format(args.model,args.number))
 
     return total_loss, total_loss_val
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--num_filters',default=32,type=int,help='number of filters')
-    parser.add_argument('--activation',default='LeakyRule',type=str,help='what activate function to use',choices=['Relu','LeakyRelu'])
+    parser.add_argument('--activation',default='LeakyRelu',type=str,help='what activate function to use',choices=['Relu','LeakyRelu'])
 
 # optimizer hyperparameters
     parser.add_argument('--lr',default=1e-3,type=float,help='learning rate')
