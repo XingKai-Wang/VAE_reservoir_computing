@@ -26,8 +26,8 @@ def training(args):
     training_loss = 0
     total_loss = []
     total_loss_val = []
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    if torch.cuda.device_count() > 1:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.device_count() > 0:
         model.to(device)
     model.train()
     for e in range(args.epoch + 1):
@@ -36,8 +36,8 @@ def training(args):
             train_data, _ = data
             # train_data: [b, 1, 28, 28]
             train_data = Variable(train_data)
-            if torch.cuda.device_count() > 1:
-                train_data.to(device)
+            if torch.cuda.device_count() > 0:
+                train_data = train_data.to(device)
             optim.zero_grad()
             loss, recon_img, reloss, kld = model(train_data)
             loss.backward()
@@ -57,8 +57,8 @@ def training(args):
 
     # plot loss and reconstruct image
         if e % 10 == 0:
-            visdom_visualization(args.model, args.number, model, train_loader)
-            model.sample_and_save(args.batch_size, e)
+            #visdom_visualization(args.model, args.number, model, train_loader)
+            model.sample_and_save(args.batch_size, e, device)
     plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
     plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
     # plot laten space

@@ -37,8 +37,8 @@ def evaluation(model, data_loader, total_loss_val,device):
     for batch_index, data in enumerate(data_loader):
         val_data, _ = data
         val_data = Variable(val_data)
-        if torch.cuda.device_count() > 1:
-            val_data.to(device)
+        if torch.cuda.device_count() > 0:
+            val_data = val_data.to(device)
         loss, recom_img, reloss, kld = model(val_data)
 
         val_loss += loss.item()
