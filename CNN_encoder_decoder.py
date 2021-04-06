@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-class CNNEncoder:
+class CNNEncoder(nn.Module):
     def __init__(self, num_input_channels = 1, num_filters = 32, z_dims = 20):
         '''
 
@@ -31,7 +31,7 @@ class CNNEncoder:
         mu, log_var = torch.chunk(h_e, 2, dim=1)
         return mu, log_var
 
-class CNNDecoder:
+class CNNDecoder(nn.Module):
     def __init__(self, num_input_channels = 1, num_filters = 32, z_dims = 10):
         super(CNNDecoder, self).__init__()
         self.num_input_channels = num_input_channels
