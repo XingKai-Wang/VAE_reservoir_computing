@@ -32,9 +32,15 @@ class CNNEncoder(nn.Module):
         return mu, log_var
 
 class CNNDecoder(nn.Module):
-    def __init__(self, num_input_channels = 1, num_filters = 32, z_dims = 10):
+    def __init__(self, num_output_channels = 1, num_filters = 32, z_dims = 10):
+        '''
+
+        :param num_input_channels: number of output channels, for Mnist data is 1
+        :param num_filters: number of filters to use
+        :param z_dims: dimension of laten space
+        '''
         super(CNNDecoder, self).__init__()
-        self.num_input_channels = num_input_channels
+        self.num_output_channels = num_output_channels
         self.num_filters = num_filters
         self.z_dim = z_dims
 
@@ -49,7 +55,7 @@ class CNNDecoder(nn.Module):
             nn.LeakyReLU(),
             nn.ConvTranspose2d(2 * hidden_filters, hidden_filters, kernel_size=(4,4), padding=(1,1), output_padding=(0,0), stride=(2,2)), # 7x7 -> 14x14
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(hidden_filters, self.num_input_channels, kernel_size=(4,4), padding=(1,1), output_padding=(0,0), stride=(2,2)), # 14x14 -> 28x28
+            nn.ConvTranspose2d(hidden_filters, self.num_output_channels, kernel_size=(4,4), padding=(1,1), output_padding=(0,0), stride=(2,2)), # 14x14 -> 28x28
             nn.Sigmoid()
         )
 
