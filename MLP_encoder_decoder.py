@@ -41,7 +41,7 @@ class MLPEncoder(nn.Module):
     def forward(self, x):
         '''
         divide outputs as mean and log variance
-        :param x:
+        :param x: input images
         :return: mean and log variance
         '''
         h_e = self.encode(x)

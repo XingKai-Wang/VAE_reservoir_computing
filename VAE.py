@@ -5,10 +5,12 @@ from MLP_encoder_decoder import MLPEncoder
 from MLP_encoder_decoder import MLPDecoder
 from CNN_encoder_decoder import CNNEncoder
 from CNN_encoder_decoder import CNNDecoder
+from RC_encoder_decoder import RCEncoder
+from RC_encoder_decoder import RCDecoder
 from torchvision.utils import save_image
 
 class VAE(nn.Module):
-    def __init__(self, model_name, z_dim, num_filters, activation, *args, **kwargs):
+    def __init__(self, model_name, z_dim, num_filters, activation, T, *args, **kwargs):
         super(VAE, self).__init__()
         self.activation = activation
         self.z_dim = z_dim
@@ -18,6 +20,9 @@ class VAE(nn.Module):
         elif model_name == 'CNN':
             self.encoder = CNNEncoder(num_input_channels=1, num_filters=num_filters, z_dims=z_dim)
             self.decoder = CNNDecoder(num_input_channels=1, num_filters=num_filters, z_dims=z_dim // 2)
+        elif model_name == 'RC':
+            self.encoder = RCEncoder(input_dim=784, reservoir_dim=256, z_dim=z_dim,T=T)
+            self.decoder = RCDecoder(z_dim=z_dim // 2, reservoir_dim=256, output_dim=784)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z
