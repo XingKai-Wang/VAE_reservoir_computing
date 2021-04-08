@@ -16,7 +16,7 @@ def training(args):
     train_loader, val_loader, test_loader = datasets(batch_size=args.batch_size)
 
     # create model
-    model = VAE(model_name=args.model,z_dim=args.z_dim,num_filters=args.num_filters,activation=args.activation)
+    model = VAE(model_name=args.model,z_dim=args.z_dim,num_filters=args.num_filters,activation=args.activation,T=args.T,layer_type=args.layer_type)
 
     # optimizer
     optim = optimizer(model, args.lr)
@@ -74,9 +74,12 @@ if __name__ == '__main__':
 
 # model hyperparameters
     parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC'])
+    parser.add_argument('--layer_type',default='cnn',type=str,help='what layer to use in RC encoder-decoder',choices=['mlp','cnn'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--num_filters',default=32,type=int,help='number of filters')
     parser.add_argument('--activation',default='LeakyRelu',type=str,help='what activate function to use',choices=['Relu','LeakyRelu'])
+    parser.add_argument('--T',default=10,type=int,help='recurrent time')
+
 
 # optimizer hyperparameters
     parser.add_argument('--lr',default=1e-3,type=float,help='learning rate')

@@ -16,6 +16,7 @@ class CNNEncoder(nn.Module):
 
         hidden_filters = num_filters
         self.encoder = nn.Sequential(
+            # output = (input - kernel_size + 2 * padding) / stride + 1
             nn.Conv2d(self.num_input_channels, self.num_filters, kernel_size=(4,4), padding=(1,1), stride=(2,2)), # 28x28 -> 14x14
             nn.LeakyReLU(),
             nn.Conv2d(hidden_filters, 2 * hidden_filters, kernel_size=(4,4),padding=(1,1),stride=(2,2)), # 14x14 -> 7x7
