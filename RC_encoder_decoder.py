@@ -102,8 +102,7 @@ class RCDecoder(nn.Module):
 
     def forward(self, z):
         if self.layer_type == 'mlp':
-            x_mean = self.decoder(z)
-            x_recon = torch.sigmoid(x_mean)
+            x_recon = self.decoder(z)
             x_recon = x_recon.reshape(z.shape[0], self.out_dim[0], self.out_dim[1], self.out_dim[2])
         elif self.layer_type == 'cnn':
             x = self.linear(z)
