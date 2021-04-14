@@ -9,7 +9,7 @@ class CasualConv1d(nn.Module):
         self.dilation = dilation
         self.A = A
 
-        self.padding = (kernel_size - 1) * dilation + A * 1
+        self.padding = (kernel_size[0] - 1) * dilation + A * 1
 
         self.CasualConv1d = nn.Conv1d(in_channels,out_channels,self.kernel_size,stride=(1,),padding=(0,),dilation=dilation,**kwargs)
 
