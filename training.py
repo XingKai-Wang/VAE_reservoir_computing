@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # model hyperparameters
-    parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC'])
+    parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Casual'])
     parser.add_argument('--layer_type',default='cnn',type=str,help='what layer to use in RC encoder-decoder',choices=['mlp','cnn'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--num_filters',default=32,type=int,help='number of filters')
