@@ -9,8 +9,8 @@ class CausalReservoirEncoder(nn.Module):
         self.z_dim = z_dim
         hidden_filters = num_filters
 
-        self.Conv1d = nn.Sequential(
-            CausalConv1d(in_channels,out_channels,kernel_size=(3,),dilation=1,A=False),
+        self.conv1d = nn.Sequential(
+            CausalConv1d(in_channels,out_channels,kernel_size=(3,3),dilation=1,A=False),
             nn.LeakyReLU()
         )
         for p in self.parameters():
@@ -27,7 +27,7 @@ class CausalReservoirEncoder(nn.Module):
         )
 
     def forward(self, x):
-        x = self.Conv1d(x.view(x.shape[0], 1, 784))
+        x = self.conv1d(x.view(x.shape[0], 1, 784))
         h_e = self.encoder(x.view(x.shape[0], -1, 28, 28))
         mu, log_var = torch.chunk(h_e, 2, dim=1)
 
@@ -45,9 +45,10 @@ class CausalReservoirDecoder(nn.Module):
             nn.LeakyReLU()
         )
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(2*hidden_filters, hidden_filters, kernel_size=(4,), padding=(1,), stride=(2,)), #7x7 -> 14x14
+            # output=(input - 1) * stride + output_padding - 2 * padding + kernel
+            nn.ConvTranspose2d(2*hidden_filters, hidden_filters, kernel_size=(4,4), padding=(1,1), stride=(2,2)), #7x7 -> 14x14
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(hidden_filters, out_channels, kernel_size=(4,), padding=(1,), stride=(2,)), # 14x14 -> 28x28
+            nn.ConvTranspose2d(hidden_filters, out_channels, kernel_size=(4,4), padding=(1,1), stride=(2,2)), # 14x14 -> 28x28
             nn.Sigmoid()
         )
 
