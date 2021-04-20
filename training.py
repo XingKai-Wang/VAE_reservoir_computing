@@ -7,6 +7,7 @@ from helper import *
 from datasets import datasets
 import visdom
 import torch.autograd
+from pytorch_model_summary import summary
 
 
 
@@ -17,12 +18,12 @@ def training(args):
 
     # create model
     model = VAE(model_name=args.model,z_dim=args.z_dim,num_filters=args.num_filters,activation=args.activation,T=args.T,layer_type=args.layer_type)
-
+    summary(model, torch.zeros(64, 1, 784), show_input=True, show_hierarchical=False)
     # optimizer
     optim = optimizer(model, args.lr)
 
     # start training
-    print(model)
+    #print(model)
     training_loss = 0
     total_loss = []
     total_loss_val = []
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # model hyperparameters
-    parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Casual'])
+    parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Causal'])
     parser.add_argument('--layer_type',default='cnn',type=str,help='what layer to use in RC encoder-decoder',choices=['mlp','cnn'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--num_filters',default=32,type=int,help='number of filters')

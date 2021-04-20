@@ -11,11 +11,14 @@ class CausalConv1d(nn.Module):
 
         self.padding = (kernel_size[0] - 1) * dilation + A * 1
 
-        self.CausalConv1d = nn.Conv1d(in_channels,out_channels,self.kernel_size,stride=(1,),padding=(0,),dilation=dilation,**kwargs)
+        self.conv1d = nn.Conv1d(in_channels,out_channels,
+                                self.kernel_size,
+                                stride=(1,1),padding=(0,0),
+                                dilation=dilation,**kwargs)
 
     def forward(self, x):
         x = F.pad(x, (self.padding, 0))
-        conv1d_out = self.CausalConv1d(x)
+        conv1d_out = self.conv1d(x)
         if self.A:
             return conv1d_out[:,:,: -1]
         else:
