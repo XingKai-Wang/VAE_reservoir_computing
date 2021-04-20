@@ -7,7 +7,8 @@ from helper import *
 from datasets import datasets
 import visdom
 import torch.autograd
-from pytorch_model_summary import summary
+#from pytorch_model_summary import summary
+from torchsummary import summary
 
 
 
@@ -18,7 +19,6 @@ def training(args):
 
     # create model
     model = VAE(model_name=args.model,z_dim=args.z_dim,num_filters=args.num_filters,activation=args.activation,T=args.T,layer_type=args.layer_type)
-    summary(model, torch.zeros(64, 1, 784), show_input=True, show_hierarchical=False)
     # optimizer
     optim = optimizer(model, args.lr)
 
@@ -30,6 +30,7 @@ def training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 0:
         model.to(device)
+    summary(model, (1, 28, 28))
     model.train()
     for e in range(args.epoch + 1):
         epoch_loss = []

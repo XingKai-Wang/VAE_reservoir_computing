@@ -30,7 +30,7 @@ class RCEncoder(nn.Module):
         )
 
         self.convs = nn.Sequential(
-            nn.Conv2d(self.num_input_channels, self.num_filters, kernel_size=(4,4),stride=(2,2)), # 16x16 -> 7x7
+            nn.Conv2d(self.num_input_channels, self.num_filters, kernel_size=4,stride=2), # 16x16 -> 7x7
             nn.LeakyReLU(),
             # nn.Conv2d(hidden_filters, 2 * hidden_filters, kernel_size=(3, 3), padding=(1, 1), stride=(2, 2)),  # 7x7 -> 4x4
             # nn.LeakyReLU(),
@@ -94,9 +94,9 @@ class RCDecoder(nn.Module):
             # output=(input - 1) * stride + output_padding - 2 * padding + kernel
             # nn.ConvTranspose2d(2 * hidden_filters, hidden_filters, kernel_size=(3, 3), padding=(1, 1),output_padding=(0, 0), stride=(2, 2)),  # 4x4 -> 7x7
             # nn.LeakyReLU(),
-            nn.ConvTranspose2d(hidden_filters, hidden_filters, kernel_size=(4, 4), padding=(0, 0),output_padding=(0, 0), stride=(2, 2)), # 7x7 -> 16x16
+            nn.ConvTranspose2d(hidden_filters, hidden_filters, kernel_size=4, padding=0,output_padding=0, stride=2), # 7x7 -> 16x16
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(hidden_filters, self.num_output_channels, kernel_size=(2,2),padding=(2,2),output_padding=(0,0),stride=(2,2)), #16x16 -> 28x28
+            nn.ConvTranspose2d(hidden_filters, self.num_output_channels, kernel_size=2,padding=2,output_padding=0,stride=2), #16x16 -> 28x28
             nn.Sigmoid()
         )
 

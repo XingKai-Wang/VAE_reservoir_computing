@@ -17,11 +17,11 @@ class CNNEncoder(nn.Module):
         hidden_filters = num_filters
         self.encoder = nn.Sequential(
             # output = (input - kernel_size + 2 * padding) / stride + 1
-            nn.Conv2d(self.num_input_channels, self.num_filters, kernel_size=(4,4), padding=(1,1), stride=(2,2)), # 28x28 -> 14x14
+            nn.Conv2d(self.num_input_channels, self.num_filters, kernel_size=4, padding=1, stride=2), # 28x28 -> 14x14
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_filters, 2 * hidden_filters, kernel_size=(4,4),padding=(1,1),stride=(2,2)), # 14x14 -> 7x7
+            nn.Conv2d(hidden_filters, 2 * hidden_filters, kernel_size=4,padding=1,stride=2), # 14x14 -> 7x7
             nn.LeakyReLU(),
-            nn.Conv2d(2 * num_filters, 4 * num_filters, kernel_size=(3,3),padding=(1,1),stride=(1,1)), # 7x7 -> 7x7
+            nn.Conv2d(2 * num_filters, 4 * num_filters, kernel_size=3,padding=1,stride=1), # 7x7 -> 7x7
             nn.LeakyReLU(),
             nn.Flatten(),
             nn.Linear(4 * num_filters * 7 * 7, z_dims)
@@ -52,11 +52,11 @@ class CNNDecoder(nn.Module):
         )
         self.decoder = nn.Sequential(
             # output=(input - 1) * stride + output_padding - 2 * padding + kernel
-            nn.ConvTranspose2d(4 * hidden_filters, 2 * hidden_filters, kernel_size=(3,3), padding=(1,1), output_padding=(0,0), stride=(1,1)), # 7x7 -> 7x7
+            nn.ConvTranspose2d(4 * hidden_filters, 2 * hidden_filters, kernel_size=3, padding=1, output_padding=0, stride=1), # 7x7 -> 7x7
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(2 * hidden_filters, hidden_filters, kernel_size=(4,4), padding=(1,1), output_padding=(0,0), stride=(2,2)), # 7x7 -> 14x14
+            nn.ConvTranspose2d(2 * hidden_filters, hidden_filters, kernel_size=4, padding=1, output_padding=0, stride=2), # 7x7 -> 14x14
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(hidden_filters, self.num_output_channels, kernel_size=(4,4), padding=(1,1), output_padding=(0,0), stride=(2,2)), # 14x14 -> 28x28
+            nn.ConvTranspose2d(hidden_filters, self.num_output_channels, kernel_size=4, padding=1, output_padding=0, stride=2), # 14x14 -> 28x28
             nn.Sigmoid()
         )
 
