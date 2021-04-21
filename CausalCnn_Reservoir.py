@@ -11,6 +11,10 @@ class CausalReservoirEncoder(nn.Module):
 
         self.conv1d = nn.Sequential(
             CausalConv1d(in_channels,out_channels,kernel_size=3,dilation=1,A=False),
+            nn.LeakyReLU(),
+            CausalConv1d(out_channels,out_channels,kernel_size=3,dilation=2,A=False),
+            nn.LeakyReLU(),
+            CausalConv1d(out_channels, out_channels,kernel_size=3,dilation=4,A=False),
             nn.LeakyReLU()
         )
         for p in self.parameters():
