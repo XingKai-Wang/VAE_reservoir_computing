@@ -1,0 +1,11 @@
+1 layer Causal kernel_size = 3
+20
+32
+LeakyRelu
+T = 5
+cnn
+1e-3
+64
+80
+7
+

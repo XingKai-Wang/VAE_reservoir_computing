@@ -1,0 +1,13 @@
+1 layer Causal kernel_size = 3 dilation = 1
+2 layer Causal Kernel_size = 3 dilation = 2
+3 layer Causal Kernel_size = 3 dilation = 4
+20
+32
+LeakyRelu
+T = 5
+cnn
+1e-3
+64
+80
+7
+
