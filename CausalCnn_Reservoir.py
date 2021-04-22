@@ -12,9 +12,11 @@ class CausalReservoirEncoder(nn.Module):
         self.conv1d = nn.Sequential(
             CausalConv1d(in_channels,out_channels,kernel_size=3,dilation=1,A=False),
             nn.LeakyReLU(),
-            CausalConv1d(out_channels,out_channels,kernel_size=3,dilation=2,A=False),
+            CausalConv1d(out_channels,out_channels,kernel_size=3,dilation=1,A=False),
             nn.LeakyReLU(),
-            CausalConv1d(out_channels, out_channels,kernel_size=3,dilation=4,A=False),
+            CausalConv1d(out_channels, out_channels,kernel_size=3,dilation=2,A=False),
+            nn.LeakyReLU(),
+            CausalConv1d(out_channels,out_channels,kernel_size=3,dilation=4,A=False),
             nn.LeakyReLU()
         )
         for p in self.parameters():
@@ -25,8 +27,10 @@ class CausalReservoirEncoder(nn.Module):
             nn.LeakyReLU(),
             nn.Conv2d(hidden_filters, 2 * hidden_filters, kernel_size=4, padding=1, stride=2), # 14x14 -> 7x7
             nn.LeakyReLU(),
+            nn.Conv2d(2 * num_filters, 4 * num_filters, kernel_size=3, padding=1, stride=1),  # 7x7 -> 7x7
+            nn.LeakyReLU(),
             nn.Flatten(),
-            nn.Linear(2*hidden_filters*7*7, self.z_dim)
+            nn.Linear(4*hidden_filters*7*7, self.z_dim)
 
         )
 
@@ -45,11 +49,13 @@ class CausalReservoirDecoder(nn.Module):
         hidden_filters = num_filters
 
         self.linear = nn.Sequential(
-            nn.Linear(self.z_dim, 2*hidden_filters*7*7),
+            nn.Linear(self.z_dim, 4*hidden_filters*7*7),
             nn.LeakyReLU()
         )
         self.decoder = nn.Sequential(
             # output=(input - 1) * stride + output_padding - 2 * padding + kernel
+            nn.ConvTranspose2d(4 * hidden_filters, 2 * hidden_filters, kernel_size=3, padding=1, output_padding=0,stride=1),  # 7x7 -> 7x7
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(2*hidden_filters, hidden_filters, kernel_size=4, padding=1, stride=2), #7x7 -> 14x14
             nn.LeakyReLU(),
             nn.ConvTranspose2d(hidden_filters, out_channels, kernel_size=4, padding=1, stride=2), # 14x14 -> 28x28
