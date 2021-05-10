@@ -59,13 +59,3 @@ if __name__ == '__main__':
     for batch_index, data in enumerate(train_loader):
         train_data = data
         print(torch.max(train_data))
-        break
-
-
-
-
-
-
-
-
-
