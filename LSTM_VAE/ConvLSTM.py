@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from torch.autograd import Variable
 
 class ConvLSTMCell(nn.Module):
@@ -53,14 +54,12 @@ class ConvLSTMCell(nn.Module):
                 Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).cuda())
 
 class ConvLSTM(nn.Module):
-    def __init__(self, input_channels, hidden_channels, kernel_size, step=1, effective_step=[1]):
+    def __init__(self, input_channels, hidden_channels, kernel_size):
         super(ConvLSTM, self).__init__()
         self.input_channels = [input_channels] + hidden_channels
         self.hidden_channels = hidden_channels
         self.num_layers = len(hidden_channels)
         self.kernel_size = kernel_size
-        self.step = step
-        self.effective_step = effective_step
         self._all_layers = []
 
         for i in range(self.num_layers):
@@ -73,13 +72,13 @@ class ConvLSTM(nn.Module):
         internal_state = []
         outputs = []
 
-        for step in range(self.step):
-            x = input[step]
+        for seq_index in range(input.size(1)):
+            x = input[:,seq_index,:,:]
             for i in range(self.num_layers):
                 # intialize all cells in first step
                 name = 'cell{}'.format(i)
-                if step == 0:
-                    batch_size, sequenct, _, h, w = x.size()
+                if seq_index == 0:
+                    batch_size, _, h, w = x.size()
                     (h, c) = getattr(self, name).init_hidden(batch_size, self.hidden_channels[i], (h, w))
 
                     internal_state.append((h, c))
@@ -87,22 +86,19 @@ class ConvLSTM(nn.Module):
                 (h, c) = internal_state[i]
                 x, new_c = getattr(self, name)(x, h, c)
                 internal_state[i] = (x, new_c)
-            # only record effective stpes
-            if step in self.effective_step:
-                outputs.append(x)
+
+            outputs.append(x)
 
         return outputs, (x, new_c)
 
 if __name__ == '__main__':
     # gradient check
-    convlstm = ConvLSTM(input_channels=512, hidden_channels=[128, 64, 64, 32, 32], kernel_size=3, step=5,
-                        effective_step=[4]).cuda()
+    convlstm = ConvLSTM(input_channels=1, hidden_channels=[128, 64, 64, 32, 32], kernel_size=3).cuda()
     loss_fn = torch.nn.MSELoss()
 
-    input = Variable(torch.randn(1, 512, 64, 32)).cuda()
-    target = Variable(torch.randn(1, 32, 64, 32)).double().cuda()
+    input = Variable(torch.randn(1, 20, 1, 64, 32)).cuda()
+    target = Variable(torch.randn(1, 20, 1, 64, 32)).double().cuda()
 
     output = convlstm(input)
-    print(output[0])
-    output = output[0][0].double()
-    res = torch.autograd.gradcheck(loss_fn, (output, target), eps=1e-6, raise_exception=True)
+    print(output[0].shape)
+    #res = torch.autograd.gradcheck(loss_fn, (output, target), eps=1e-6, raise_exception=True)

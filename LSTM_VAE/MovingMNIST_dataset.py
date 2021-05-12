@@ -16,6 +16,9 @@ def MovingMNISTdataloader(path):
     return data_trans
 
 class MovingMNISTdataset(Dataset):
+    '''
+    output shape: B S C=1 H W
+    '''
     def __init__(self, path):
         self.data = MovingMNISTdataloader(path)
 
@@ -58,4 +61,4 @@ if __name__ == '__main__':
     train_loader, val_loader, test_loader = processeddataset('../data/MovingMNIST/mnist_test_seq.npy')
     for batch_index, data in enumerate(train_loader):
         train_data = data
-        print(torch.max(train_data))
+        print(train_data.shape)
