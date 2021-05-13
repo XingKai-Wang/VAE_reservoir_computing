@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
+from LSTM_VAE.MovingMNIST_dataset import *
+
 
 class ConvLSTMCell(nn.Module):
     def __init__(self, input_channels, hidden_channels, kernel_size):
@@ -91,14 +93,3 @@ class ConvLSTM(nn.Module):
 
         return outputs, (x, new_c)
 
-if __name__ == '__main__':
-    # gradient check
-    convlstm = ConvLSTM(input_channels=1, hidden_channels=[128, 64, 64, 32, 32], kernel_size=3).cuda()
-    loss_fn = torch.nn.MSELoss()
-
-    input = Variable(torch.randn(1, 20, 1, 64, 32)).cuda()
-    target = Variable(torch.randn(1, 20, 1, 64, 32)).double().cuda()
-
-    output = convlstm(input)
-    print(output[0].shape)
-    #res = torch.autograd.gradcheck(loss_fn, (output, target), eps=1e-6, raise_exception=True)
