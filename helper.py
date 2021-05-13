@@ -47,6 +47,23 @@ def evaluation(model, data_loader, total_loss_val,device):
 
     return total_loss_val
 
+def evaluation_lstm(model, data_loader, total_loss_val,device):
+    val_loss = 0.0
+    epoch_loss = []
+    model.eval()
+    for batch_index, data in enumerate(data_loader):
+        val_data = data
+        val_data = Variable(val_data)
+        if torch.cuda.device_count() > 0:
+            val_data = val_data.to(device)
+        loss, recom_img, reloss, kld = model(val_data)
+
+        val_loss += loss.item()
+        epoch_loss.append(loss.item())
+    total_loss_val.append(np.mean(epoch_loss))
+
+    return total_loss_val
+
 def visdom_visualization(name, number, model, data_loader):
     viz = visdom.Visdom(env = name + number)
     x, _ = iter(data_loader).next()
