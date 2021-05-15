@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 import argparse
 from torch.autograd import Variable
 from torchvision.utils import save_image
@@ -7,6 +10,7 @@ from LSTM_VAE.MovingMNIST_dataset import *
 from LSTM_VAE.ConvLSTM_VAE import *
 import torch.autograd
 from torchsummary import summary
+import gc
 
 
 
@@ -16,7 +20,7 @@ def training(args):
     train_loader, val_loader, test_loader = processeddataset(path='../data/MovingMNIST/mnist_test_seq.npy', batch_size=args.batch_size)
 
     # create model
-    model = LSTM_VAE(input_channels=args.input_channels, hidden_channels=args.hidden_channels, kernel_size=args.kernel_size,z_dim=args.z_dim)
+    model = LSTM_VAE(input_channels=args.input_channels, hidden_channels_e=args.hidden_channels_e, hidden_channels_d=args.hidden_channels_d, kernel_size=args.kernel_size,z_dim=args.z_dim)
     # optimizer
     optim = optimizer(model, args.lr)
 
@@ -28,12 +32,13 @@ def training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 0:
         model.to(device)
-    summary(model, (8, 20, 1, 64, 64))
+    #summary(model, (20, 1, 64, 64))
     model.train()
     for e in range(args.epoch + 1):
         epoch_loss = []
         for batch_index, data in enumerate(train_loader):
             train_data = data
+            print(train_data.size())
             # train_data: [b, seq, 1, 64, 64]
             train_data = Variable(train_data)
             if torch.cuda.device_count() > 0:
@@ -45,20 +50,21 @@ def training(args):
 
             training_loss += loss.item()
             epoch_loss.append(loss.item())
-            if batch_index % 140 == 139:
+            if batch_index % 125 == 124:
                 print('[%d, %5d] loss: %.3f' %
                       (e + 1, batch_index + 1, training_loss / 140))
                 training_loss = 0.0
+            del train_data
+            gc.collect()
+            #torch.cuda.empty_cache()
         total_loss.append(np.mean(epoch_loss))
 
     # start validation
         total_loss_val = evaluation_lstm(model,val_loader,total_loss_val,device)
 
-
-    # plot loss and reconstruct image
-    #     if e % 10 == 0:
-    #         #visdom_visualization(args.model, args.number, model, train_loader)
-    #         model.sample_and_save(args.batch_size, e, device)
+    # plot reconstruct image
+        if e == args.epoch:
+            plot_movingmnist(recon_img)
 
     plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
     plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
@@ -74,10 +80,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # model hyperparameters
-    parser.add_argument('--model',default='MLP',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Causal'])
+    parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Causal','ConvLSTM'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
-    parser.add_argument('--input_channels', default=32,type=int,help='input channels for decoder')
-    parser.add_argument('--hidden_channels',default=[128, 64, 32], type=list,help='list contains hidden channels for different layer')
+    parser.add_argument('--input_channels', default=128,type=int,help='input channels for decoder')
+    parser.add_argument('--hidden_channels_e',default=[32, 64, 128], type=list,help='list contains hidden channels for different layer in encoder')
+    parser.add_argument('--hidden_channels_d', default=[64, 32, 1], type=list,help='list contains hidden channels for different layer in decoder')
     parser.add_argument('--kernel_size',default=3,type=int,help='kernel size in ConvLSTM')
 
 # optimizer hyperparameters

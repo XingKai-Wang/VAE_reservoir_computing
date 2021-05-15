@@ -5,15 +5,16 @@ from helper import *
 import numpy as np
 
 class LSTM_VAE(nn.Module):
-    def __init__(self, input_channels, hidden_channels, kernel_size, z_dim):
+    def __init__(self, input_channels, hidden_channels_e, hidden_channels_d, kernel_size, z_dim):
         super(LSTM_VAE, self).__init__()
         self.input_channels = input_channels
-        self.hidden_channels = hidden_channels
+        self.hidden_channels_e = hidden_channels_e
+        self.hidden_channels_d = hidden_channels_d
         self.kernel_size = kernel_size
         self.z_dim = z_dim
 
-        self.encoder = ConvLSTMEncoder(1, self.hidden_channels[0], self.kernel_size, self.z_dim)
-        self.decoder = ConvLSTMDecoder(self.input_channels, self.hidden_channels[1], self.kernel_size, self.z_dim // 2)
+        self.encoder = ConvLSTMEncoder(self.hidden_channels_e, self.kernel_size, self.z_dim)
+        self.decoder = ConvLSTMDecoder(self.input_channels, self.hidden_channels_d, self.kernel_size, self.z_dim // 2)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z
@@ -27,13 +28,17 @@ class LSTM_VAE(nn.Module):
             # apply reparameterization trick on each z
             z = reparameterization(mu, log_var)
             latent_z.append(z)
-        kld = np.mean(kld_total)
+
+        kld = kld_total / 20.0
         # decode forward process: reconstruct data with 64 x 64 dimensions
         recon_img = self.decoder.forward(latent_z)
+        recon_img = torch.stack(recon_img, 1)
         # sample a binary image
         image = torch.bernoulli(image)
         # calculate the reconstruction loss
         criterion = nn.BCELoss()
+        print(torch.max(recon_img), torch.min(recon_img))
+        print(torch.max(image), torch.min(image))
         reloss = criterion(recon_img, image)
         # elbo  = kld + reloss
         elbo = kld + reloss

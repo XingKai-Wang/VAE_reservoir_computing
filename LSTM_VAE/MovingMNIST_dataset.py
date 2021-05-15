@@ -28,12 +28,12 @@ class MovingMNISTdataset(Dataset):
 
     def __getitem__(self, index):
         self.trainsample_ = self.data[index, ...]
-        self.sample = self.trainsample_ / 255.0 # Normalization
+        self.sample = self.trainsample_
         self.sample = torch.from_numpy(np.expand_dims(self.trainsample_, axis = 1)).float()
 
-        return self.sample
+        return self.sample / 255.0 # Normalization to [0, 1]
 
-def processeddataset(path, valid_size = 0.2, batch_size = 16, num_workers = 4, shuffer = True):
+def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, shuffer = True):
     # load movingmnist dataset
     movingmnist = MovingMNISTdataset(path)
     # split train_dataset and test_dataset by 0.8 : 0.2
