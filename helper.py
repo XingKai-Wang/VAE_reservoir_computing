@@ -72,6 +72,13 @@ def visdom_visualization(name, number, model, data_loader):
         viz.images(x, nrow=8, win='origin', opts=dict(title='x_origin'))
         viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
 
+def plot_movingmnist(recon_image):
+    for i in range(0, 20):
+        # create plot
+        fig = plt.figure(figsize=(10, 5))
+        toplot_pred = recon_image[0, i, :, :].squeeze(1).permute(1, 2, 0)
+        plt.imshow(toplot_pred)
+        plt.savefig('../plot' + '/%i_image.png' % (i + 1))
 
 def plot_loss(name, number, epoch, total_loss, eva_type):
     sns.set_style('darkgrid')
