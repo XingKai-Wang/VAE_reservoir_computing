@@ -7,6 +7,7 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from torchvision.utils import save_image
 
 def reparameterization(mu, log_var):
     '''
@@ -73,14 +74,15 @@ def visdom_visualization(name, number, model, data_loader):
         viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
 
 def plot_movingmnist(recon_image):
+    fig1 = plt.figure(1, figsize=(10, 5))
     for i in range(0, 20):
         # create plot
-        fig = plt.figure(figsize=(10, 5))
         toplot_pred = recon_image[0, i, :, :].squeeze(1).permute(1, 2, 0)
-        plt.imshow(toplot_pred)
+        plt.imshow(toplot_pred.cpu().detach().numpy())
         plt.savefig('../plot' + '/%i_image.png' % (i + 1))
 
 def plot_loss(name, number, epoch, total_loss, eva_type):
+    fig2 = plt.figure(2)
     sns.set_style('darkgrid')
     x = np.arange(0, epoch + 1)
     my_x_ticks = np.arange(0, epoch + 1, 5)
@@ -90,7 +92,7 @@ def plot_loss(name, number, epoch, total_loss, eva_type):
     plt.xlabel('epoch')
     plt.ylabel('{}'.format(eva_type))
     plt.legend()
-    plt.savefig('./plot/{}{}_{}.png'.format(name, number, eva_type))
+    plt.savefig('../plot/{}{}_{}.png'.format(name, number, eva_type))
 
 def visualization_laten(decoder, grid_size = 8):
     start = 0.5 / (grid_size + 1)
