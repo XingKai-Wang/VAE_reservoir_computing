@@ -38,7 +38,7 @@ def training(args):
         epoch_loss = []
         for batch_index, data in enumerate(train_loader):
             train_data = data
-            print(train_data.size())
+            # print(train_data.size())
             # train_data: [b, seq, 1, 64, 64]
             train_data = Variable(train_data)
             if torch.cuda.device_count() > 0:
@@ -50,7 +50,7 @@ def training(args):
 
             training_loss += loss.item()
             epoch_loss.append(loss.item())
-            if batch_index % 125 == 124:
+            if batch_index % 50 == 49:
                 print('[%d, %5d] loss: %.3f' %
                       (e + 1, batch_index + 1, training_loss / 140))
                 training_loss = 0.0
@@ -60,11 +60,13 @@ def training(args):
         total_loss.append(np.mean(epoch_loss))
 
     # start validation
-        total_loss_val = evaluation_lstm(model,val_loader,total_loss_val,device)
+        with torch.no_grad():
+            total_loss_val = evaluation_lstm(model,val_loader,total_loss_val,device)
 
     # plot reconstruct image
-        if e == args.epoch:
-            plot_movingmnist(recon_img)
+        with torch.no_grad():
+            if e == args.epoch:
+                plot_movingmnist(recon_img)
 
     plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
     plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
@@ -72,7 +74,7 @@ def training(args):
     if args.z_dim == 2:
         img_grid = visualization_laten(model.decoder)
         save_image(img_grid, './plot/{}{}vae_laten.png'.format(args.model,args.number))
-    torch.save(model.state_dict(), './model/{}{}.pt'.format(args.model,args.number))
+    torch.save(model.state_dict(), '../model/{}{}.pt'.format(args.model,args.number))
 
     return total_loss, total_loss_val
 
@@ -83,8 +85,8 @@ if __name__ == '__main__':
     parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Causal','ConvLSTM'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--input_channels', default=128,type=int,help='input channels for decoder')
-    parser.add_argument('--hidden_channels_e',default=[32, 64, 128], type=list,help='list contains hidden channels for different layer in encoder')
-    parser.add_argument('--hidden_channels_d', default=[64, 32, 1], type=list,help='list contains hidden channels for different layer in decoder')
+    parser.add_argument('--hidden_channels_e',default=[32, 64, 128], nargs='+',type=int,help='list contains hidden channels for different layer in encoder')
+    parser.add_argument('--hidden_channels_d', default=[64, 32, 1], nargs='+',type=int,help='list contains hidden channels for different layer in decoder')
     parser.add_argument('--kernel_size',default=3,type=int,help='kernel size in ConvLSTM')
 
 # optimizer hyperparameters

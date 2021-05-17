@@ -39,6 +39,6 @@ class ConvLSTMDecoder(nn.Module):
         for i in range(len(z)):
             z[i] = self.linear(z[i]).reshape(z[i].shape[0], -1, 64, 64)
         z = torch.stack(z, dim=1)
-        x_recon = self.convlstm(z)
+        x_recon = torch.sigmoid(torch.stack(self.convlstm(z)[0], 1))
 
-        return x_recon[0]
+        return x_recon

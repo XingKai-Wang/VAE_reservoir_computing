@@ -7,9 +7,13 @@ if __name__ == '__main__':
         if batch_index == 1:
             break
         train_data = data
-        for i in range(0, 20):
-            # create plot
-            fig = plt.figure(figsize=(10, 5))
-            toplot_pred = train_data[0,i,:,:].squeeze(1).permute(1,2,0)
-            plt.imshow(toplot_pred)
-            plt.savefig('../plot' + '/%i_image.png' % (i + 1))
+        print(train_data.shape)
+        print(torch.max(train_data))
+        print(torch.min(train_data))
+
+        # for i in range(0, 20):
+        #     # create plot
+        #     fig = plt.figure(figsize=(10, 5))
+        #     toplot_pred = train_data[0,i,:,:].squeeze(1).permute(1,2,0)
+        #     plt.imshow(toplot_pred)
+        #     plt.savefig('../plot' + '/%i_image.png' % (i + 1))

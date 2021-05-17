@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, random_split, SubsetRandomSampler, DataLoa
 def MovingMNISTdataloader(path):
     '''
     load MovingMNIST dataset, shape = [time sequence, batch size, width, height]
-    B S H W -> S B H W
+    C S H W -> S C H W
     :param path: path of the MovingMnist dataset
     :return: transpose dataset
     '''
@@ -19,8 +19,9 @@ class MovingMNISTdataset(Dataset):
     '''
     output shape: B S C=1 H W
     '''
-    def __init__(self, path):
+    def __init__(self, path, transform):
         self.data = MovingMNISTdataloader(path)
+        self.transform = transform
 
 
     def __len__(self):
@@ -28,14 +29,17 @@ class MovingMNISTdataset(Dataset):
 
     def __getitem__(self, index):
         self.trainsample_ = self.data[index, ...]
-        self.sample = self.trainsample_
-        self.sample = torch.from_numpy(np.expand_dims(self.trainsample_, axis = 1)).float()
+        self.sample_ = self.trainsample_
+        if self.transform:
+            for sequence_index in range(self.sample_.shape[0]):
+                self.sample_[sequence_index, :, :] = self.transform(self.sample_[sequence_index, :, :])
+        self.sample = torch.from_numpy(np.expand_dims(self.sample_, axis = 1)).float()
 
-        return self.sample / 255.0 # Normalization to [0, 1]
+        return self.sample  # Normalization
 
-def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, shuffer = True):
+def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, shuffer = True, transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0,],[1,])])):
     # load movingmnist dataset
-    movingmnist = MovingMNISTdataset(path)
+    movingmnist = MovingMNISTdataset(path, transform)
     # split train_dataset and test_dataset by 0.8 : 0.2
     train_size = int(len(movingmnist) * 0.8)
     test_size = len(movingmnist) - train_size
@@ -56,4 +60,9 @@ def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, sh
     test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffer,num_workers=num_workers)
 
     return train_loader, val_loader, test_loader
+
+# if __name__ == '__main__':
+#     dataset = MovingMNISTdataset('../data/MovingMNIST/mnist_test_seq.npy', transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.1307,],[0.3081,])]))
+#     print(dataset.__getitem__(0).shape)
+#     print(torch.max(torch.from_numpy(dataset.__getitem__(0))), torch.min(torch.from_numpy(dataset.__getitem__(0))))
 

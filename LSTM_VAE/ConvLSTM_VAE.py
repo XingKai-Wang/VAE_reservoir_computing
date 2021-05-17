@@ -32,13 +32,13 @@ class LSTM_VAE(nn.Module):
         kld = kld_total / 20.0
         # decode forward process: reconstruct data with 64 x 64 dimensions
         recon_img = self.decoder.forward(latent_z)
-        recon_img = torch.stack(recon_img, 1)
         # sample a binary image
         image = torch.bernoulli(image)
         # calculate the reconstruction loss
         criterion = nn.BCELoss()
-        print(torch.max(recon_img), torch.min(recon_img))
-        print(torch.max(image), torch.min(image))
+        # print(recon_img.shape)
+        # print(torch.max(recon_img), torch.min(recon_img))
+        # print(torch.max(image), torch.min(image))
         reloss = criterion(recon_img, image)
         # elbo  = kld + reloss
         elbo = kld + reloss
