@@ -31,6 +31,10 @@ def optimizer(model, lr):
     optimizer = optim.Adam(model.parameters(), lr = lr)
     return optimizer
 
+def schedular(optimizer, step_size):
+    schedular = optim.lr_scheduler.StepLR(optimizer, step_size)
+    return schedular
+
 def evaluation(model, data_loader, total_loss_val,device):
     val_loss = 0.0
     epoch_loss = []
@@ -63,7 +67,7 @@ def evaluation_lstm(model, data_loader, total_loss_val,device):
         epoch_loss.append(loss.item())
     total_loss_val.append(np.mean(epoch_loss))
 
-    return total_loss_val
+    return total_loss_val, np.mean(epoch_loss)
 
 def visdom_visualization(name, number, model, data_loader):
     viz = visdom.Visdom(env = name + number)
