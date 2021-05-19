@@ -11,6 +11,7 @@ from LSTM_VAE.ConvLSTM_VAE import *
 import torch.autograd
 from torchsummary import summary
 import gc
+from PytorchES import EarlyStopping
 
 
 
@@ -23,7 +24,10 @@ def training(args):
     model = LSTM_VAE(input_channels=args.input_channels, hidden_channels_e=args.hidden_channels_e, hidden_channels_d=args.hidden_channels_d, kernel_size=args.kernel_size,z_dim=args.z_dim)
     # optimizer
     optim = optimizer(model, args.lr)
-
+    # schedular
+    # sche = schedular(optim, step_size=30)
+    # intialize earlystoping
+    early_stopping = EarlyStopping(patience=5, verbose=True)
     # start training
     #print(model)
     training_loss = 0
@@ -61,8 +65,15 @@ def training(args):
 
     # start validation
         with torch.no_grad():
-            total_loss_val = evaluation_lstm(model,val_loader,total_loss_val,device)
+            total_loss_val, val_loss_es = evaluation_lstm(model,val_loader,total_loss_val,device)
 
+        # sche.step()
+
+        early_stopping(val_loss_es, model)
+
+        if early_stopping.early_stop:
+            print("Early stopping")
+            break
     # plot reconstruct image
         with torch.no_grad():
             if e == args.epoch:

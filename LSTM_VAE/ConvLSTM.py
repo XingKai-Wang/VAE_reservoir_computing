@@ -91,14 +91,3 @@ class ConvLSTM(nn.Module):
             outputs.append(x)
 
         return outputs, (x, new_c)
-
-if __name__ == '__main__':
-    train_loader, val_loader, test_loader = processeddataset('../data/MovingMNIST/mnist_test_seq.npy')
-    convlstm = ConvLSTM(input_channels=1, hidden_channels=[128, 64, 32], kernel_size=3).cuda()
-
-    for batch_index, data in enumerate(train_loader):
-        train_data = data
-        output = convlstm(train_data.cuda())
-        print(torch.stack(output[0], 1).shape)
-        break
-
