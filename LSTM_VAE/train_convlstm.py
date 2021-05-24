@@ -25,18 +25,17 @@ def training(args):
     # optimizer
     optim = optimizer(model, args.lr)
     # schedular
-    # sche = schedular(optim, step_size=30)
+    sche = schedular(optim)
     # intialize earlystoping
     early_stopping = EarlyStopping(patience=5, verbose=True)
     # start training
-    #print(model)
     training_loss = 0
     total_loss = []
     total_loss_val = []
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 0:
         model.to(device)
-    #summary(model, (20, 1, 64, 64))
+    summary(model, (20, 1, 64, 64))
     model.train()
     for e in range(args.epoch + 1):
         epoch_loss = []
@@ -72,6 +71,8 @@ def training(args):
         early_stopping(val_loss_es, model)
 
         if early_stopping.early_stop:
+            with torch.no_grad():
+                    plot_movingmnist(recon_img)
             print("Early stopping")
             break
     # plot reconstruct image
@@ -79,8 +80,8 @@ def training(args):
             if e == args.epoch:
                 plot_movingmnist(recon_img)
 
-    plot_loss(args.model, args.number, args.epoch, total_loss, 'training loss')
-    plot_loss(args.model, args.number, args.epoch, total_loss_val, 'validation loss')
+    plot_loss(args.model, args.number, total_loss, 'training loss')
+    plot_loss(args.model, args.number, total_loss_val, 'validation loss')
     # plot laten space
     if args.z_dim == 2:
         img_grid = visualization_laten(model.decoder)
@@ -93,7 +94,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # model hyperparameters
-    parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['MLP','CNN','RC','Causal','ConvLSTM'])
+    parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['ConvLSTM', 'RC'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--input_channels', default=128,type=int,help='input channels for decoder')
     parser.add_argument('--hidden_channels_e',default=[32, 64, 128], nargs='+',type=int,help='list contains hidden channels for different layer in encoder')

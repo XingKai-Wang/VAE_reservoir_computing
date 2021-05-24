@@ -90,4 +90,4 @@ class ConvLSTM(nn.Module):
 
             outputs.append(x)
 
-        return outputs, (x, new_c)
+        return torch.stack(outputs, dim=1)

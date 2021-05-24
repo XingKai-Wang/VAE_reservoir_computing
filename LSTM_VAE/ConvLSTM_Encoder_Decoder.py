@@ -15,14 +15,15 @@ class ConvLSTMEncoder(nn.Module):
         self.linear = nn.Linear(self.hidden_channels[-1] * 64 * 64, self.z_dim)
 
     def forward(self, x):
-        mu_logvar = []
-        outputs = self.convlstm(x)[0]
-        for output in outputs:
-            h_e = self.linear(output.view(-1, self.hidden_channels[-1] * 64 * 64))
-            (mu, log_var) = torch.chunk(h_e, 2, dim=1)
-            mu_logvar.append((mu, log_var))
+        outputs = self.convlstm(x)
+        # for output in outputs:
+        #         #     h_e = self.linear(output.view(-1, self.hidden_channels[-1] * 64 * 64))
+        #         #     (mu, log_var) = torch.chunk(h_e, 2, dim=1)
+        #         #     mu_logvar.append((mu, log_var))
+        h_e = self.linear(outputs.view(outputs.size(0), 20, -1, self.hidden_channels[-1] * 64 * 64))
+        mu, log_var = torch.chunk(h_e, 2, dim=1)
 
-        return mu_logvar
+        return mu, log_var
 
 class ConvLSTMDecoder(nn.Module):
     def __init__(self, input_channels, hidden_channels, kernel_size, z_dim):
@@ -34,11 +35,14 @@ class ConvLSTMDecoder(nn.Module):
 
         self.linear = nn.Linear(self.z_dim, self.input_channels * 64 * 64)
         self.convlstm = ConvLSTM(self.input_channels, self.hidden_channels,self.kernel_size)
+        self.conv3d = nn.Conv3d(self.hidden_channels[-1], 1, kernel_size=3, stride=1,padding=1)
 
     def forward(self, z):
-        for i in range(len(z)):
-            z[i] = self.linear(z[i]).reshape(z[i].shape[0], -1, 64, 64)
-        z = torch.stack(z, dim=1)
-        x_recon = torch.sigmoid(torch.stack(self.convlstm(z)[0], 1))
+        x = self.linear(z.view(z.size(0), 20, -1, self.z_dim))
+        x = x.reshape(x.size(0), 20, -1, 64, 64)
+        # B C S H W
+        x = self.convlstm(x).permute(0, 2, 1, 3, 4)
+        # B S C H W
+        x_recon = torch.sigmoid(self.conv3d(x)).permute(0, 2, 1, 3, 4)
 
         return x_recon

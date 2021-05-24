@@ -35,9 +35,9 @@ class MovingMNISTdataset(Dataset):
                 self.sample_[sequence_index, :, :] = self.transform(self.sample_[sequence_index, :, :])
         self.sample = torch.from_numpy(np.expand_dims(self.sample_, axis = 1)).float()
 
-        return self.sample  # Normalization
+        return self.sample / 255.0 # Normalization
 
-def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, shuffer = True, transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0,],[1,])])):
+def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, shuffer = True, transform = None):
     # load movingmnist dataset
     movingmnist = MovingMNISTdataset(path, transform)
     # split train_dataset and test_dataset by 0.8 : 0.2
