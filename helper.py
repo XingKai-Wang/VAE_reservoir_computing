@@ -32,7 +32,7 @@ def optimizer(model, lr):
     return optimizer
 
 def schedular(optimizer, step_size):
-    schedular = optim.lr_scheduler.StepLR(optimizer, step_size)
+    schedular = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=4, verbose=True)
     return schedular
 
 def evaluation(model, data_loader, total_loss_val,device):
@@ -81,15 +81,15 @@ def plot_movingmnist(recon_image):
     fig1 = plt.figure(1, figsize=(10, 5))
     for i in range(0, 20):
         # create plot
-        toplot_pred = recon_image[0, i, :, :].squeeze(1).permute(1, 2, 0)
+        toplot_pred = torch.bernoulli(recon_image)[0, i, :, :].squeeze()
         plt.imshow(toplot_pred.cpu().detach().numpy())
         plt.savefig('../plot' + '/%i_image.png' % (i + 1))
 
-def plot_loss(name, number, epoch, total_loss, eva_type):
+def plot_loss(name, number, total_loss, eva_type):
     fig2 = plt.figure(2)
     sns.set_style('darkgrid')
-    x = np.arange(0, epoch + 1)
-    my_x_ticks = np.arange(0, epoch + 1, 5)
+    x = np.arange(0, len(total_loss) + 1)
+    my_x_ticks = np.arange(0, len(total_loss) + 1, 1)
     plt.xticks(my_x_ticks)
     sns.lineplot(x=x, y=total_loss, label='{} on the mnist data'.format(eva_type))
     # plt.fill_between(x = 'nums', y1 = df['avg'] - df['std'], y2 = df['avg'] + df['std'], alpha = 0.1,color = 'blue', data = df)
