@@ -21,7 +21,7 @@ class ConvLSTMEncoder(nn.Module):
         #         #     (mu, log_var) = torch.chunk(h_e, 2, dim=1)
         #         #     mu_logvar.append((mu, log_var))
         h_e = self.linear(outputs.view(outputs.size(0), 20, -1, self.hidden_channels[-1] * 64 * 64))
-        mu, log_var = torch.chunk(h_e, 2, dim=1)
+        mu, log_var = torch.chunk(h_e, 2, dim=3)
 
         return mu, log_var
 

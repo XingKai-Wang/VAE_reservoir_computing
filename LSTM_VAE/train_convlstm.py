@@ -21,7 +21,7 @@ def training(args):
     train_loader, val_loader, test_loader = processeddataset(path='../data/MovingMNIST/mnist_test_seq.npy', batch_size=args.batch_size)
 
     # create model
-    model = LSTM_VAE(input_channels=args.input_channels, hidden_channels_e=args.hidden_channels_e, hidden_channels_d=args.hidden_channels_d, kernel_size=args.kernel_size,z_dim=args.z_dim)
+    model = LSTM_VAE(model=args.model,input_channels=args.input_channels, hidden_channels_e=args.hidden_channels_e, hidden_channels_d=args.hidden_channels_d, kernel_size=args.kernel_size,num_filters=args.num_filters,z_dim=args.z_dim)
     # optimizer
     optim = optimizer(model, args.lr)
     # schedular
@@ -94,12 +94,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # model hyperparameters
-    parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['ConvLSTM', 'RC'])
+    parser.add_argument('--model',default='ConvLSTM',type=str,help='what model to use in VAE', choices=['ConvLSTM', 'RCS'])
     parser.add_argument('--z_dim',default=20,type=int,help='dimension of laten space')
     parser.add_argument('--input_channels', default=128,type=int,help='input channels for decoder')
     parser.add_argument('--hidden_channels_e',default=[32, 64, 128], nargs='+',type=int,help='list contains hidden channels for different layer in encoder')
     parser.add_argument('--hidden_channels_d', default=[64, 32, 1], nargs='+',type=int,help='list contains hidden channels for different layer in decoder')
     parser.add_argument('--kernel_size',default=3,type=int,help='kernel size in ConvLSTM')
+    parser.add_argument('--num_filters',default=32,type=int,help='number of filters in conv3d layers')
 
 # optimizer hyperparameters
     parser.add_argument('--lr',default=1e-3,type=float,help='learning rate')

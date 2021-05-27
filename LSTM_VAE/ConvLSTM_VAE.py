@@ -18,8 +18,8 @@ class LSTM_VAE(nn.Module):
         if model == 'ConvLSTM':
             self.encoder = ConvLSTMEncoder(self.hidden_channels_e, self.kernel_size, self.z_dim)
             self.decoder = ConvLSTMDecoder(self.input_channels, self.hidden_channels_d, self.kernel_size, self.z_dim // 2)
-        if model == 'RC':
-            self.encoder = ReserviorEncoder(input_dim=64*64, reservoir_dim=1024, num_filters=self.num_filters, z_dim=self.z_dim)
+        if model == 'RCS':
+            self.encoder = ReserviorEncoder(input_dim=64*64, reservoir_dim=1024, input_channels=1, num_filters=self.num_filters, z_dim=self.z_dim)
             self.decoder = ReservoirDecoder(z_dim=self.z_dim // 2, num_filters=self.num_filters, output_channels=1)
 
     def forward(self, image):
@@ -51,3 +51,4 @@ class LSTM_VAE(nn.Module):
         elbo = kld + reloss
 
         return elbo, recon_img, reloss, kld
+
