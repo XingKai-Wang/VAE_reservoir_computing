@@ -1,30 +1,37 @@
+from tqdm import tqdm
 from LSTM_VAE.MovingMNIST_dataset import *
 import matplotlib.pyplot as plt
 import imageio
 import torch
+from torch.utils.data import DataLoader
+from torchvision.utils import save_image, make_grid
+from helper import *
+from LSTM_VAE.ConvLSTM_VAE import *
 
 if __name__ == '__main__':
-    # train_loader, val_loader, test_loader = processeddataset('../data/MovingMNIST/mnist_test_seq.npy')
-    # for batch_index, data in enumerate(train_loader):
-    #     if batch_index == 1:
-    #         break
-    #     train_data = data
-    #     print(train_data.shape)
-    #     print(torch.max(train_data))
-    #     print(torch.min(train_data))
-    #     train_data = torch.bernoulli(train_data)
-    #     for i in range(0, 20):
-    #         # create plot
-    #         fig = plt.figure(figsize=(10, 5))
-    #         toplot_pred = train_data[0,i,:,:].squeeze()
-    #         # print(toplot_pred.shape)
-    #         plt.imshow(toplot_pred)
-    #         plt.savefig('../plot' + '/%i_image.png' % (i + 1))
+    train_loader, val_loader, test_loader = processeddataset('../data/MovingMNIST/mnist_test_seq.npy', batch_size=1)
+    model = LSTM_VAE(model='ConvLSTM',hidden_channels_d=[128],hidden_channels_e=[128],input_channels=128,kernel_size=3,num_filters=32,z_dim=20)
+    # checkpoint = torch.load('../model/ConvLSTM3.pt')
+    # model.load_state_dict(checkpoint['model'])
+    model.load_state_dict(torch.load('../model/checkpoint_128.pt'))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.device_count() > 0:
+        model.to(device)
+    model.eval()
+    for batch_index, data in enumerate(train_loader):
+        if batch_index == 1:
+            break
+        train_data = data[:,:10,:,:,:]
+        # train_data = Variable(train_data)
+        if torch.cuda.device_count() > 0:
+            train_data = train_data.to(device)
+        _, recon_image, _, _ = model(train_data)
+
+        # create plot
+        # fig = plt.figure(figsize=(10, 5))
+        plot_movingmnist(train_data, 'test')
+        plot_movingmnist(recon_image, 'recon')
 
 
-    im1 = imageio.imread('../plot/moving_mnist_plot/20_image.png')
-    image1 = torch.bernoulli(torch.from_numpy(np.array(im1) / 255.0)).numpy()
-    im2 = imageio.imread('../plot/RCS0/20_image.png')
-    image2 = torch.bernoulli(torch.from_numpy(np.array(im2) / 255.0)).numpy()
-    plt.imshow(image2)
-    plt.show()
+
+

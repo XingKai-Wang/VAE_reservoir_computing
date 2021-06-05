@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from LSTM_VAE.ConvLSTM import ConvLSTM
+from LSTM_VAE.ConvLSTM_old import ConvLSTM
 
 
 class ConvLSTMEncoder(nn.Module):
@@ -20,7 +20,7 @@ class ConvLSTMEncoder(nn.Module):
         #         #     h_e = self.linear(output.view(-1, self.hidden_channels[-1] * 64 * 64))
         #         #     (mu, log_var) = torch.chunk(h_e, 2, dim=1)
         #         #     mu_logvar.append((mu, log_var))
-        h_e = self.linear(outputs.view(outputs.size(0), 20, -1, self.hidden_channels[-1] * 64 * 64))
+        h_e = self.linear(outputs.view(outputs.size(0), outputs.size(1), -1, self.hidden_channels[-1] * 64 * 64))
         mu, log_var = torch.chunk(h_e, 2, dim=3)
 
         return mu, log_var
@@ -38,8 +38,8 @@ class ConvLSTMDecoder(nn.Module):
         self.conv3d = nn.Conv3d(self.hidden_channels[-1], 1, kernel_size=3, stride=1,padding=1)
 
     def forward(self, z):
-        x = self.linear(z.view(z.size(0), 20, -1, self.z_dim))
-        x = x.reshape(x.size(0), 20, -1, 64, 64)
+        x = self.linear(z.view(z.size(0), z.size(1), -1, self.z_dim))
+        x = x.reshape(x.size(0), z.size(1), -1, 64, 64)
         # B C S H W
         x = self.convlstm(x).permute(0, 2, 1, 3, 4)
         # B S C H W

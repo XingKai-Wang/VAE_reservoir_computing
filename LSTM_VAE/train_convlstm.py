@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import argparse
+import os
 from torch.autograd import Variable
 from torchvision.utils import save_image
 import numpy as np
@@ -27,7 +28,7 @@ def training(args):
     # schedular
     sche = schedular(optim)
     # intialize earlystoping
-    early_stopping = EarlyStopping(patience=5, verbose=True)
+    early_stopping = EarlyStopping(patience=10, verbose=True, delta=1e-4)
     # start training
     training_loss = 0
     total_loss = []
@@ -36,8 +37,18 @@ def training(args):
     if torch.cuda.device_count() > 0:
         model.to(device)
     summary(model, (20, 1, 64, 64))
+
+    if os.path.exists('../model/{}{}.pt'.format(args.model, args.number)):
+        checkpoint = torch.load('../model/{}{}.pt'.format(args.model, args.number))
+        model.load_state_dict(checkpoint['model'])
+        optim.load_state_dict(checkpoint['optimizer'])
+        start_epoch = checkpoint['epoch']
+        print('load epoch {} successfully！'.format(start_epoch))
+    else:
+        start_epoch = 0
+        print('no saved model, start training from epoch 0！')
     model.train()
-    for e in range(args.epoch + 1):
+    for e in range(start_epoch, args.epoch + 1):
         epoch_loss = []
         for batch_index, data in enumerate(train_loader):
             train_data = data
@@ -54,8 +65,8 @@ def training(args):
             training_loss += loss.item()
             epoch_loss.append(loss.item())
             if batch_index % 50 == 49:
-                print('[%d, %5d] loss: %.3f' %
-                      (e + 1, batch_index + 1, training_loss / 140))
+                print('[%d, %5d] loss: %.4f' %
+                      (e + 1, batch_index + 1, training_loss / 50))
                 training_loss = 0.0
             del train_data
             gc.collect()
@@ -66,13 +77,15 @@ def training(args):
         with torch.no_grad():
             total_loss_val, val_loss_es = evaluation_lstm(model,val_loader,total_loss_val,device)
 
-        # sche.step()
+        state = {'model': model.state_dict(), 'optimizer': optim.state_dict(), 'epoch': e}
+        torch.save(state, '../model/{}{}.pt'.format(args.model, args.number))
 
+        sche.step(val_loss_es)
         early_stopping(val_loss_es, model)
 
         if early_stopping.early_stop:
             with torch.no_grad():
-                    plot_movingmnist(recon_img)
+                plot_movingmnist(recon_img)
             print("Early stopping")
             break
     # plot reconstruct image
@@ -86,8 +99,10 @@ def training(args):
     if args.z_dim == 2:
         img_grid = visualization_laten(model.decoder)
         save_image(img_grid, './plot/{}{}vae_laten.png'.format(args.model,args.number))
-    torch.save(model.state_dict(), '../model/{}{}.pt'.format(args.model,args.number))
 
+    # state = {'model': model.state_dict(), 'optimizer': optim.state_dict(), 'epoch': e}
+    # torch.save(state, '../model/{}{}.pt'.format(args.model,args.number))
+    # torch.save(model.state_dict(), '../model/{}{}.pt'.format(args.model,args.number))
     return total_loss, total_loss_val
 
 if __name__ == '__main__':

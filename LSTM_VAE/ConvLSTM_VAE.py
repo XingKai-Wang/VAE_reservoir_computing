@@ -6,7 +6,7 @@ from helper import *
 import numpy as np
 
 class LSTM_VAE(nn.Module):
-    def __init__(self, model, input_channels, hidden_channels_e, hidden_channels_d, kernel_size, num_filters, z_dim):
+    def __init__(self, model, input_channels, hidden_channels_e, hidden_channels_d, kernel_size, num_filters, z_dim, *args, **kwargs):
         super(LSTM_VAE, self).__init__()
         self.input_channels = input_channels
         self.hidden_channels_e = hidden_channels_e
@@ -20,7 +20,7 @@ class LSTM_VAE(nn.Module):
             self.decoder = ConvLSTMDecoder(self.input_channels, self.hidden_channels_d, self.kernel_size, self.z_dim // 2)
         if model == 'RCS':
             self.encoder = ReserviorEncoder(input_dim=64*64, reservoir_dim=1024, input_channels=1, num_filters=self.num_filters, z_dim=self.z_dim)
-            self.decoder = ReservoirDecoder(z_dim=self.z_dim // 2, num_filters=self.num_filters, output_channels=1)
+            self.decoder = ReservoirDecoder(z_dim=self.z_dim // 2, num_filters=self.num_filters, hidden_channels= self.hidden_channels_d, kernel_size=self.kernel_size,output_channels=1)
 
     def forward(self, image):
         # encode forward process: calculate the mu and log_var of z

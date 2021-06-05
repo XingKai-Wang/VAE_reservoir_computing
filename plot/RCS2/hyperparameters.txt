@@ -1,3 +1,0 @@
-num filters = 64
-batch size = 16
-learning rate = 1e-5

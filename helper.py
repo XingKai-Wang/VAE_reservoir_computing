@@ -77,13 +77,14 @@ def visdom_visualization(name, number, model, data_loader):
         viz.images(x, nrow=8, win='origin', opts=dict(title='x_origin'))
         viz.images(x_hat, nrow=8, win='recon', opts=dict(title='x_recon'))
 
-def plot_movingmnist(recon_image):
-    fig1 = plt.figure(1, figsize=(10, 5))
-    for i in range(0, 20):
+def plot_movingmnist(recon_image,name):
+    # fig1 = plt.figure(1, figsize=(10, 5))
+    for i in range(0, recon_image.size(1)):
         # create plot
         toplot_pred = recon_image[0, i, :, :].squeeze()
-        plt.imshow(toplot_pred.cpu().detach().numpy())
-        plt.savefig('../plot' + '/%i_image.png' % (i + 1))
+        # plt.imshow(toplot_pred.cpu().detach().numpy())
+        img_grid = make_grid(toplot_pred).float()
+        save_image(img_grid, '../plot/{}_{}.png' .format((i + 1), name))
 
 def plot_loss(name, number, total_loss, eva_type):
     fig2 = plt.figure(2)
