@@ -18,18 +18,19 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 0:
         model.to(device)
     model.eval()
-    for batch_index, data in enumerate(train_loader):
+    for batch_index, data in enumerate(test_loader):
         if batch_index == 1:
             break
-        train_data = data[:,:10,:,:,:]
+        test_data = data
         # train_data = Variable(train_data)
         if torch.cuda.device_count() > 0:
-            train_data = train_data.to(device)
-        _, recon_image, _, _ = model(train_data)
+            test_data = test_data.to(device)
+        _, recon_image, _, _ = model(test_data)
 
         # create plot
         # fig = plt.figure(figsize=(10, 5))
-        plot_movingmnist(train_data, 'test')
+        # for i in range(20):
+        plot_movingmnist(test_data, 'test')
         plot_movingmnist(recon_image, 'recon')
 
 

@@ -55,9 +55,9 @@ def processeddataset(path, valid_size = 0.2, batch_size = 8, num_workers = 4, sh
     train_sampler = SubsetRandomSampler(train_index)
     val_sampler = SubsetRandomSampler(val_index)
 
-    train_loader = DataLoader(train_dataset,batch_size=batch_size,sampler=train_sampler,num_workers=num_workers)
-    val_loader = DataLoader(train_dataset,batch_size=batch_size,sampler=val_sampler,num_workers=num_workers)
-    test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffer,num_workers=num_workers)
+    train_loader = DataLoader(train_dataset,batch_size=batch_size,sampler=train_sampler,num_workers=num_workers,pin_memory=True)
+    val_loader = DataLoader(train_dataset,batch_size=batch_size,sampler=val_sampler,num_workers=num_workers,pin_memory=True)
+    test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffer,num_workers=num_workers,pin_memory=True)
 
     return train_loader, val_loader, test_loader
 

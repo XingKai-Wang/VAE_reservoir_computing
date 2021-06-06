@@ -55,7 +55,6 @@ class ConvLSTMCell(nn.Module):
         return (Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).cuda(),
                 Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).cuda())
 
-
 class ConvLSTM(nn.Module):
     def __init__(self, input_channels, hidden_channels, kernel_size):
         super(ConvLSTM, self).__init__()
@@ -75,7 +74,7 @@ class ConvLSTM(nn.Module):
         internal_state = []
         outputs = []
         for seq_index in range(input.size(1)):
-            x = input[:, seq_index, :, :]
+            x = input[:,seq_index,:,:]
             for i in range(self.num_layers):
                 # intialize all cells in first step
                 name = 'cell{}'.format(i)
@@ -92,4 +91,4 @@ class ConvLSTM(nn.Module):
 
             outputs.append(x)
 
-        return reversed(torch.stack(outputs, dim=1))
+        return torch.stack(list(reversed(outputs)), dim=1)

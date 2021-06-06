@@ -57,10 +57,12 @@ def training(args):
             train_data = Variable(train_data)
             if torch.cuda.device_count() > 0:
                 train_data = train_data.to(device)
-            optim.zero_grad()
             loss, recon_img, reloss, kld = model(train_data)
+            loss = loss / 8
             loss.backward()
-            optim.step()
+            if ((batch_index + 1) % 8) == 0:
+                optim.step()
+                optim.zero_grad()
 
             training_loss += loss.item()
             epoch_loss.append(loss.item())
