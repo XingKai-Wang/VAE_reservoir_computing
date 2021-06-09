@@ -13,12 +13,12 @@ if __name__ == '__main__':
     model = LSTM_VAE(model='ConvLSTM',hidden_channels_d=[128],hidden_channels_e=[128],input_channels=128,kernel_size=3,num_filters=32,z_dim=20)
     # checkpoint = torch.load('../model/ConvLSTM3.pt')
     # model.load_state_dict(checkpoint['model'])
-    model.load_state_dict(torch.load('../model/checkpoint_128.pt'))
+    model.load_state_dict(torch.load('../model/checkpoint_128_8x8.pt'))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 0:
         model.to(device)
     model.eval()
-    for batch_index, data in enumerate(test_loader):
+    for batch_index, data in enumerate(train_loader):
         if batch_index == 1:
             break
         test_data = data

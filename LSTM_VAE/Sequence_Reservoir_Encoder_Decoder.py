@@ -1,85 +1,57 @@
 import torch
 import torch.nn as nn
 from LSTM_VAE.ConvLSTM import ConvLSTM
+from torchesn.nn import ESN
 
 class ReserviorEncoder(nn.Module):
-    def __init__(self, input_dim, reservoir_dim, input_channels, num_filters, z_dim):
+    def __init__(self, input_dim, hidden_dim, output_dim, z_dim, output_step='mean', nonlinearity='relu'):
         super(ReserviorEncoder, self).__init__()
         self.input_dim = input_dim
-        self.r_dim = reservoir_dim
-        self.input_channels = input_channels
-        self.num_filters = num_filters
+        self.hidden_dim = hidden_dim
+        self.output_dim = output_dim
         self.z_dim = z_dim
+        self.output_setp = output_step
+        self.nonlinearity = nonlinearity
 
-        self.Win = torch.randn(self.input_dim, self.r_dim).cuda()
-        self.Wr = torch.randn(self.r_dim, self.r_dim).cuda()
-        self.U = torch.randn(self.input_dim, self.r_dim).cuda()
+        self.esn = ESN(self.input_dim,self.hidden_dim,self.output_dim,output_steps=self.output_setp,nonlinearity=self.nonlinearity)
+        self.linear = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(self.output_dim, self.z_dim)
+            )
 
-        self.convs = nn.Sequential(
-            # output = ([(input + 2 * padding - dilation * (kernel - 1) - 1 ]/ stride) + 1
-            nn.Conv3d(self.input_channels, self.num_filters, padding=1, kernel_size=(3,3,3), stride=(1,2,2)),  # 32x32 -> 16x16
-            nn.LeakyReLU(),
-            nn.Conv3d(self.num_filters, 2 * self.num_filters, padding=(1,0,0),kernel_size=(3,4,4), stride=(1,2,2)), # 16x16 -> 7x7
-            nn.LeakyReLU())
-
-        self.linear = nn.Linear(2 * self.num_filters * 7 * 7, self.z_dim)
-
-    def encode(self, input):
-        H = []
-        for seq_index in range(input.size(1)):
-            x = input[:,seq_index,:,:]
-            # initialize reservoir
-            # h = tanh(x * Win)
-            if seq_index == 0:
-                h = torch.tanh(torch.matmul(x.view(x.size(0), -1, 64 * 64), self.Win))
-            # hi = tanh(x * U + hi-1 * Wr)
-            else:
-                h = torch.tanh(torch.matmul(x.view(x.size(0), -1, 64 * 64), self.U) + torch.matmul(h, self.Wr))
-
-            H.append(h)
-        return torch.stack(H, dim=1)
 
     def forward(self, x):
-        h = self.encode(x)
-        h = h.reshape(x.size(0), 20, -1, 32, 32).permute(0, 2, 1, 3, 4)
-        h_e = self.convs(h)
-        h_e = self.linear(h_e.view(x.size(0), -1, 20, 2*self.num_filters*7*7))
-
-        mu, log_var = torch.chunk(h_e, 2, dim=3)
+        x = x.squeeze().reshape(x.size(0),x.size(1),x.size()[3] *x.size()[4]).transpose(0,1)
+        washout_list = [0] * x.size(1)
+        h, _ = self.esn(x, washout_list)
+        h_e = self.linear(h)
+        mu, log_var = torch.chunk(h_e, 2, dim=2)
 
         return mu, log_var
 
 class ReservoirDecoder(nn.Module):
-    def  __init__(self, z_dim, num_filters, hidden_channels, kernel_size,output_channels):
+    def  __init__(self, z_dim, output_dim, hidden_channels, kernel_size):
         super(ReservoirDecoder, self).__init__()
         self.z_dim = z_dim
-        self.num_filters = num_filters
+        self.output_dim = output_dim
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size
-        self.output_channels = output_channels
 
 
         self.linear = nn.Sequential(
-            nn.Linear(self.z_dim, 2 * self.num_filters * 7 * 7),
-            nn.LeakyReLU()
+            nn.Linear(self.z_dim, self.output_dim),
+            nn.ReLU()
         )
 
-        self.convlstm = ConvLSTM(2 * self.num_filters, self.hidden_channels, self.kernel_size)
-
+        self.convlstm = ConvLSTM(1, self.hidden_channels, self.kernel_size)
         self.decoder = nn.Sequential(
-            # output = (input − 1) × stride − 2 × padding + dilation × (kernel − 1) + output_padding + 1
-            nn.ConvTranspose3d(self.hidden_channels[-1], self.num_filters, kernel_size=(3,4,4), padding=(1,0,0), output_padding=0, stride=(1,2,2)), # 7x7 -> 16x16
-            nn.LeakyReLU(),
-            nn.ConvTranspose3d(self.num_filters, self.num_filters, kernel_size=3, padding=1, output_padding=(0,1,1),stride=(1,2,2)),  # 16x16 -> 32x32
-            nn.LeakyReLU(),
-            nn.ConvTranspose3d(self.num_filters, self.output_channels, kernel_size=3, padding=1, output_padding=(0,1,1), stride=(1,2,2)) # 32x32 -> 64x64
+            nn.ReLU(),
+            nn.Conv3d(self.hidden_channels[-1], 1, kernel_size=3, stride=1,padding=1)
         )
-
-
 
     def forward(self, z):
         x = self.linear(z)
-        x = x.reshape([x.size(0), -1, 20, 7, 7]).permute(0, 2, 1, 3, 4)
+        x = x.reshape(x.size(0), x.size(1), 1, 64, 64).transpose(0,1)
         x = self.convlstm(x).permute(0, 2, 1, 3, 4)
         x_recon = torch.sigmoid(self.decoder(x)).permute(0, 2, 1, 3, 4)
 
